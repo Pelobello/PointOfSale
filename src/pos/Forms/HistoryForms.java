@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
- */
+
 package pos.Forms;
 
 import com.formdev.flatlaf.FlatClientProperties;
@@ -13,6 +10,9 @@ import pos.Factory.ProductsFactory;
 import pos.Factory.ProductsInterface;
 import pos.Model.ItemModel;
 import pos.Model.OrdersModel;
+import pos.TableCustom.TableCellEditor;
+import pos.TableCustom.TableCellRenderer;
+import pos.TableCustom.TableHeaderAlignment;
 
 /**
  *
@@ -25,10 +25,14 @@ public class HistoryForms extends javax.swing.JPanel {
     public HistoryForms() {
         initComponents();
          init();
+    
+      
+
         populateOrdersToTable();
        
     }
     private void init(){
+        historyTable.getTableHeader().setDefaultRenderer(new TableHeaderAlignment(historyTable));
           historyTable.getTableHeader().putClientProperty(FlatClientProperties.STYLE, ""
                 + "height:30;"
                 + "hoverBackground:null;"
@@ -36,50 +40,58 @@ public class HistoryForms extends javax.swing.JPanel {
                 + "separatorColor:$TableHeader.background;"
                 + "font:bold;");
         historyTable.putClientProperty(FlatClientProperties.STYLE, ""
-                 + "rowHeight:60;"
+                 + "rowHeight:70;"
                 + "showHorizontalLines:true;"
                 + "intercellSpacing:0,1;"
                 + "cellFocusColor:$TableHeader.hoverBackground;"
                 + "selectionBackground:$TableHeader.hoverBackground;"
                 + "selectionForeground:$Table.foreground;");
     }
-private void populateOrdersToTable() {
-    // Fetch the list of orders
-    List<OrdersModel> orderList = orderController.getOrderedProducts("test");
+          private void populateOrdersToTable() {
+    historyTable.getColumnModel().getColumn(5).setCellRenderer(new TableCellRenderer());
+    historyTable.getColumnModel().getColumn(5).setCellEditor(new TableCellEditor());
 
+    // Update historyTable
     DefaultTableModel model = (DefaultTableModel) historyTable.getModel();
-    
-    // Clear any existing rows in the table
     model.setRowCount(0);
-    for (OrdersModel order : orderList) {
-        String orderId = order.getOrdersId();
-        String cashier = order.getCashier();
-        double total = order.getTotal();
-        double cash = order.getCash();
-        double change = order.getChange();
 
-        // Flag to track if it's the first product in the order
-        boolean isFirstProduct = true;
+    List<OrdersModel> listOfOrders = orderController.getOrderedProducts("");
 
-        // Loop through the products in the order to add each one as a row
-        for (ItemModel item : order.getList_of_products()) {
-            // Extract product details
-            String title = item.getTitle();
-            String category = item.getCategory().toString();
-            int qty = item.getQuantity();
-            double price = item.getPrice();
+    for (OrdersModel listOfOrder : listOfOrders) {
+        // Create a new subtableData for each order
+        DefaultTableModel subtableData = new DefaultTableModel();
+        subtableData.addColumn("Product ID");
+        subtableData.addColumn("Title");
+        subtableData.addColumn("Category");
+        subtableData.addColumn("Quantity");
+        subtableData.addColumn("Price");
 
-            // If it's the first product, add the order details (orderId, cashier, etc.)
-            if (isFirstProduct) {
-                model.addRow(new Object[]{orderId, cashier, cash, change, total, title, category, qty, price});
-                isFirstProduct = false; // Set the flag to false after adding the first product
-            } else {
-                // If it's not the first product, leave the order details blank
-                model.addRow(new Object[]{"", "", "", "", "", title, category, qty, price});
-            }
+        // Get the list of items for the current order
+        List<ItemModel> items = listOfOrder.getList_of_products();  // Get the list of items for the order
+
+        // Add items to subtableData
+        for (ItemModel item : items) {
+            subtableData.addRow(new Object[]{
+                item.getItemId(),
+                item.getTitle(),
+                item.getCategory(),
+                item.getQuantity(),
+                item.getPrice()
+            });
         }
+
+        // Add the order data along with the subtable (subtableData) to the main table
+        model.addRow(new Object[]{
+            listOfOrder.getOrdersId(),
+            listOfOrder.getCashier(),
+            listOfOrder.getTotal(),
+            listOfOrder.getCash(),
+            listOfOrder.getChange(),
+            subtableData  // This will now be a different subtable for each order
+        });
     }
 }
+
 
 
 
@@ -92,18 +104,37 @@ private void populateOrdersToTable() {
         historyTable = new javax.swing.JTable();
         jTextField1 = new javax.swing.JTextField();
 
+        historyTable.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         historyTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null}
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null}
             },
             new String [] {
-                "OrdersID", "Cashier", "Cash", "Change", "Total", "Title", "Category", "Quantity", "Price"
+                "OrdersID", "Cashier", "Total", "Cash", "Change", "Detail"
             }
         ));
+        historyTable.setRowHeight(300);
         jScrollPane1.setViewportView(historyTable);
+        if (historyTable.getColumnModel().getColumnCount() > 0) {
+            historyTable.getColumnModel().getColumn(0).setMinWidth(70);
+            historyTable.getColumnModel().getColumn(0).setPreferredWidth(70);
+            historyTable.getColumnModel().getColumn(0).setMaxWidth(70);
+            historyTable.getColumnModel().getColumn(1).setMinWidth(150);
+            historyTable.getColumnModel().getColumn(1).setPreferredWidth(150);
+            historyTable.getColumnModel().getColumn(1).setMaxWidth(150);
+            historyTable.getColumnModel().getColumn(2).setMinWidth(70);
+            historyTable.getColumnModel().getColumn(2).setPreferredWidth(70);
+            historyTable.getColumnModel().getColumn(2).setMaxWidth(70);
+            historyTable.getColumnModel().getColumn(3).setMinWidth(70);
+            historyTable.getColumnModel().getColumn(3).setPreferredWidth(70);
+            historyTable.getColumnModel().getColumn(3).setMaxWidth(70);
+            historyTable.getColumnModel().getColumn(4).setMinWidth(70);
+            historyTable.getColumnModel().getColumn(4).setPreferredWidth(70);
+            historyTable.getColumnModel().getColumn(4).setMaxWidth(70);
+        }
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);

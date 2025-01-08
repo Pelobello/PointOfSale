@@ -58,7 +58,15 @@ public class ProductsController implements ProductsInterface{
             
         } catch (Exception e) {
          e.printStackTrace();
+        }finally {
+        if (ps != null) {
+            try {
+                ps.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+    }
     }
 
     @Override
@@ -90,7 +98,15 @@ public class ProductsController implements ProductsInterface{
            
         } catch (Exception e) {
             e.printStackTrace();
+        }finally {
+        if (ps != null) {
+            try {
+                ps.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+    }
     }
 
     @Override
@@ -150,6 +166,14 @@ public class ProductsController implements ProductsInterface{
         }
     } catch (Exception e) {
         e.printStackTrace();
+    }finally {
+        if (ps != null) {
+            try {
+                ps.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     return listOfProducts;
@@ -217,6 +241,14 @@ public class ProductsController implements ProductsInterface{
         }
     } catch (Exception e) {
         e.printStackTrace();
+    }finally {
+        if (ps != null) {
+            try {
+                ps.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     return listOfProducts;

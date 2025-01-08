@@ -23,6 +23,7 @@ public class PosItem extends javax.swing.JPanel {
     public void setData(ItemModel data) {
         this.data = data;
        
+        
       
               imageItem.setImage(data.getItemImage().getIcon());
         

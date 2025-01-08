@@ -94,52 +94,73 @@ public class OrdersController implements OrderInterface{
     }
 
     @Override
-    public List<OrdersModel> getOrderedProducts(String orderNumber) {
-          List<OrdersModel>listOfOrders = new ArrayList<>();
-        try {
-            String sql = "SELECT OrdersID, MAX(Cashier) AS Cashier, MAX(Cash) AS Cash, MAX(CChange) AS CChange, MAX(Total) AS Total FROM point_of_sale_db.orders_table GROUP BY OrdersID ORDER BY OrdersID;";
-            String sqlDetail = "SELECT Title,Category,Quantity,Price From point_of_sale_db.orders_table WHERE OrdersID = ?;";
-                           ps = databaseConnection.prepareStatement(sql);
-         PreparedStatement pd =  databaseConnection.prepareStatement(sqlDetail);
-                            
-                            rs = ps.executeQuery();
-                            
-                            
-        while (rs.next()) {        
-              String orderId = rs.getString("OrdersID");
-              String cashier = rs.getString("Cashier");
-              double cash = rs.getDouble("Cash");
-              double change = rs.getDouble("CChange");
-              double total = rs.getDouble("Total");
-              
-              pd.setString(1, orderId);
-                
-              ResultSet rd = pd.executeQuery();
-              while (rd.next()) {                
+ public List<OrdersModel> getOrderedProducts(String orderNumber) {
+    List<OrdersModel> listOfOrders = new ArrayList<>();
+    try {
+        // Main query to get order information
+        String sql = "SELECT OrdersID, MAX(Cashier) AS Cashier, MAX(Cash) AS Cash, MAX(CChange) AS CChange, MAX(Total) AS Total " +
+                     "FROM point_of_sale_db.orders_table GROUP BY OrdersID ORDER BY OrdersID;";
+
+        // Detail query to get items for each order
+        String sqlDetail = "SELECT ProductID,Title, Category, Quantity, Price FROM point_of_sale_db.orders_table WHERE OrdersID = ?;";
+
+        // Prepare statements
+        ps = databaseConnection.prepareStatement(sql);
+        PreparedStatement pd = databaseConnection.prepareStatement(sqlDetail);
+
+        // Execute the main query
+        rs = ps.executeQuery();
+
+        // Loop through each order
+        while (rs.next()) {
+            String orderId = rs.getString("OrdersID");
+            String cashier = rs.getString("Cashier");
+            double cash = rs.getDouble("Cash");
+            double change = rs.getDouble("CChange");
+            double total = rs.getDouble("Total");
+
+            // Prepare the detail query using the orderId
+            pd.setString(1, orderId);
+            ResultSet rd = pd.executeQuery();
+
+            // Create a list to hold ItemModels for this specific order
+            List<ItemModel> list_of_products = new ArrayList<>();
+
+            // Loop through all items for the current order
+            while (rd.next()) {
                 String title = rd.getString("Title");
                 String categoryStr = rd.getString("Category");
-                Categories categories = Categories.valueOf(categoryStr);
+                String productID = rd.getString("ProductID");
+                Categories categories = Categories.valueOf(categoryStr); // Assuming Categories enum
                 int qty = rd.getInt("Quantity");
                 double price = rd.getDouble("Price");
-                
-                List<ItemModel>list_of_products = new ArrayList<>();
+
+                // Create and populate ItemModel
                 ItemModel itemModel = new ItemModel();
+                itemModel.setItemId(productID);
                 itemModel.setTitle(title);
                 itemModel.setCategory(categories);
                 itemModel.setQuantity(qty);
                 itemModel.setPrice(price);
+
+                // Add the item to the list for this specific order
                 list_of_products.add(itemModel);
-                
-                OrdersModel ordersModel = new OrdersModel(orderId, cashier, list_of_products, total, cash, change);
-                listOfOrders.add(ordersModel);
             }
-            }
-          
-            
-        } catch (Exception e) {
-            e.printStackTrace();
+
+            // Now that we have the list of products for this order, create the OrdersModel
+            OrdersModel ordersModel = new OrdersModel(orderId, cashier, list_of_products, total, cash, change);
+
+            // Add the order to the list of orders
+            listOfOrders.add(ordersModel);
         }
-      return listOfOrders;
+
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+
+    // Return the list of orders, each containing its own list of products
+    return listOfOrders;
+}
+
     
 }
